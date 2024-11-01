@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>com.microchip.mplab.nbide.embedded.makeproject</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/make-project/1">
+            <name>Science</name>
+            <creation-uuid>9bc5f4df-febf-448a-b0d2-2923dbded288</creation-uuid>
+            <make-project-type>0</make-project-type>
+            <c-extensions>c</c-extensions>
+            <cpp-extensions/>
+            <header-extensions>h</header-extensions>
+            <asminc-extensions/>
+            <sourceEncoding>UTF-8</sourceEncoding>
+            <make-dep-projects/>
+            <sourceRootList>
+                <sourceRootElem>.</sourceRootElem>
+                <sourceRootElem>../FreeRTOS-Plus/Source/FreeRTOS-Plus-FAT/portable/common</sourceRootElem>
+                <sourceRootElem>../FreeRTOS-Plus/Demo/Common/FreeRTOS_Plus_FAT_Demos</sourceRootElem>
+                <sourceRootElem>../FreeRTOS-Plus/Demo/Common/FreeRTOS_Plus_CLI_Demos</sourceRootElem>
+                <sourceRootElem>../FAT</sourceRootElem>
+                <sourceRootElem>../include</sourceRootElem>
+                <sourceRootElem>../FloatPrintf.X</sourceRootElem>
+            </sourceRootList>
+            <confList>
+                <confElem>
+                    <name>MZ_EFM</name>
+                    <type>2</type>
+                </confElem>
+                <confElem>
+                    <name>MZ_ECM</name>
+                    <type>2</type>
+                </confElem>
+                <confElem>
+                    <name>MX_795</name>
+                    <type>2</type>
+                </confElem>
+                <confElem>
+                    <name>MZ_DAB</name>
+                    <type>2</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
+        </data>
+    </configuration>
+</project>
