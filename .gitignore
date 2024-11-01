@@ -39,3 +39,8 @@
 
 # SourceSafe?!
 vssver2.scc
+*.url
+SECURITY.md
+CONTRIBUTING.md
+LICENSE
+LICENSE.md
