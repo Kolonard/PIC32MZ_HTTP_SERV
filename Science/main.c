@@ -84,18 +84,123 @@ TaskHandle_t g_hPacketTask;
 /*
  *
  */
+// HTTP server
+#define HTTP_PORT       12312
+#define BUFFER_SIZE     1024
 
-union UInt32ToUInt8 {
-    uint32_t uint32_value;
-    uint8_t uint8_array[4];
-};
+// HTTP заголовок и HTML-страница с кнопкой и скриптом для AJAX-запроса
+const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+const char http_index_html[] =
+    "<html>"
+    "<body>"
+    "<h1>Random Number Generator</h1>"
+    "<button onclick=\"fetchRandomNumber()\">Generate Random Number</button>"
+    "<p id=\"randomNumber\"></p>"
+    "<script>"
+    "function fetchRandomNumber() {"
+    "  fetch('/random').then(response => response.text()).then(data => {"
+    "    document.getElementById('randomNumber').innerText = 'Random Number: ' + data;"
+    "  });"
+    "}"
+    "</script>"
+    "</body>"
+    "</html>";
+// Функция обработки HTTP-запроса
+void handle_http_request(Socket_t xClientSocket) {
+    char buffer[BUFFER_SIZE];
+    char response[BUFFER_SIZE];
+    uint8_t oo;
+    BaseType_t bytesReceived;
+    // Получаем HTTP-запрос от клиента
+    bytesReceived = FreeRTOS_recv(xClientSocket, buffer, BUFFER_SIZE, 0);
+    //
+    //__builtin_software_breakpoint();
+    if (bytesReceived > 0) {
+        oo = 0;
+        buffer[bytesReceived] = '\0';  // Завершаем строку
+            
+        // Проверяем, запрашивает ли клиент главную страницу
+        if (strstr(buffer, "GET / ")) {
+            // Отправляем главную страницу
+            snprintf(response, BUFFER_SIZE, "%s%s", http_html_hdr, http_index_html);
+            FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+        } else if (strstr(buffer, "GET /random")) {
+            // Запрос на случайное число
+            int random_number = rand() % 1000;  // Генерация случайного числа
+            snprintf(response, BUFFER_SIZE, "%d", random_number);
+            FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+        } else {
+            // Если ресурс не найден, отправляем 404
+            snprintf(response, BUFFER_SIZE, "HTTP/1.1 404 Not Found\r\n\r\n");
+            FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+        }
+    }
+
+    // Закрываем соединение с клиентом
+    FreeRTOS_closesocket(xClientSocket);
+}
+
+// Основная задача HTTP-сервера
+void http_server_task(void *pvParameters) {
+    Socket_t xListeningSocket, xClientSocket;
+    struct freertos_sockaddr xBindAddress, xClientAddress;
+    socklen_t xSize = sizeof(xClientAddress);
+    TickType_t timeout = pdMS_TO_TICKS(500); // Тайм-аут 500 мс (0.5 секунд)
+    char buffer[BUFFER_SIZE];
+    char response[BUFFER_SIZE];
+    uint8_t oo;
+    BaseType_t bytesReceived;
+    
+    // Создаем сокет для прослушивания входящих соединений
+    xListeningSocket = FreeRTOS_socket(FREERTOS_AF_INET, FREERTOS_SOCK_STREAM, FREERTOS_IPPROTO_TCP);
+    configASSERT(xListeningSocket != FREERTOS_INVALID_SOCKET);
+
+    // Привязываем сокет к порту HTTP
+    xBindAddress.sin_port = FreeRTOS_htons(HTTP_PORT);
+    FreeRTOS_bind(xListeningSocket, &xBindAddress, sizeof(xBindAddress));
+    
+    FreeRTOS_setsockopt(xListeningSocket, 0, FREERTOS_SO_RCVTIMEO, &timeout, sizeof(timeout));
+    
+    // Начинаем прослушивание порта
+    FreeRTOS_listen(xListeningSocket, 5);
+
+    for (;;) {
+        // Принимаем входящее соединение
+        xClientSocket = FreeRTOS_accept(xListeningSocket, &xClientAddress, &xSize);
+        if (xClientSocket != FREERTOS_INVALID_SOCKET) {
+            // Обрабатываем запрос и отправляем ответ
+            //handle_http_request(xClientSocket);
+            // Получаем HTTP-запрос от клиента
+            bytesReceived = FreeRTOS_recv(xClientSocket, &buffer, BUFFER_SIZE, 0);
+            if (bytesReceived > 0) {
+                buffer[bytesReceived] = '\0';  // Завершаем строку
+
+                // Проверяем, запрашивает ли клиент главную страницу
+                if (strstr(buffer, "GET / ")) {
+                    // Отправляем главную страницу
+                    snprintf(response, BUFFER_SIZE, "%s%s", http_html_hdr, http_index_html);
+                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+                } else if (strstr(buffer, "GET /random")) {
+                    // Запрос на случайное число
+                    int random_number = rand() % 1000;  // Генерация случайного числа
+                    snprintf(response, BUFFER_SIZE, "%d", random_number);
+                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+                } else {
+                    // Если ресурс не найден, отправляем 404
+                    snprintf(response, BUFFER_SIZE, "HTTP/1.1 404 Not Found\r\n\r\n");
+                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+                }
+            }
+
+            // Закрываем соединение с клиентом
+            FreeRTOS_closesocket(xClientSocket);
+        }
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
-    uint32_t ulIPAddress, ulNetMask, ulGatewayAddress, ulDNSServerAddress;
-    //uint32_t IP_Address, Net_Mask, Gateway_Address, DNS_Server_Address;
-    //uint8_t res;
-    //union UInt32ToUInt8 converter;
     // Disable interrupts - note taskDISABLE_INTERRUPTS() cannot be used here as
     // FreeRTOS does not globally disable interrupts
     __builtin_disable_interrupts();
@@ -106,10 +211,11 @@ int main(int argc, char *argv[])
 
     portDISABLE_INTERRUPTS();
 
-    xTaskCreate(&Task1, "Task1", 350, NULL, tskIDLE_PRIORITY + 1, &g_hTask1);
-    xTaskCreate(&Task2, "Task2", 620, NULL, tskIDLE_PRIORITY + 1, &g_hTask2);
-    xTaskCreate(&PacketTask, "Packet", 200, NULL, tskIDLE_PRIORITY + 4, &g_hPacketTask);
-
+    xTaskCreate(&Task1,             "Task1",        350,                            NULL, tskIDLE_PRIORITY + 1, &g_hTask1);
+    xTaskCreate(&Task2,             "Task2",        620,                            NULL, tskIDLE_PRIORITY + 1, &g_hTask2);
+    xTaskCreate(&PacketTask,        "Packet",       200,                            NULL, tskIDLE_PRIORITY + 4, &g_hPacketTask);
+    xTaskCreate(http_server_task,   "HTTP Server",  configMINIMAL_STACK_SIZE * 4,   NULL, tskIDLE_PRIORITY + 1, NULL);
+    
 #if defined(__PIC32MZ__) && (__PIC32_FEATURE_SET0 == 'D')
     FreeRTOS_IPInit(pIP_ADDRESS, pNET_MASK, pGATEWAY_ADDRESS, pDNS_ADDRESS, pDEVEL_MAC_ADDR);
 #else
@@ -119,8 +225,7 @@ int main(int argc, char *argv[])
 
     FreeRTOS_IPInit(pIP_ADDRESS, pNET_MASK, pGATEWAY_ADDRESS, pDNS_ADDRESS, tMacAddr);
 #endif
-//  FreeRTOS_IPInit(NULL, NULL, NULL, NULL, NULL);
-    FreeRTOS_GetAddressConfiguration(&ulIPAddress, &ulNetMask, &ulGatewayAddress, &ulDNSServerAddress);
+//    FreeRTOS_GetAddressConfiguration(&ulIPAddress, &ulNetMask, &ulGatewayAddress, &ulDNSServerAddress);
     
     
     
