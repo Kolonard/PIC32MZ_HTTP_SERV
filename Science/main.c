@@ -92,15 +92,31 @@ TaskHandle_t g_hPacketTask;
 const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
 const char http_index_html[] =
     "<html>"
-    "<body>"
+    "<body onload='fetchOnboardtime()'>"
     "<h1>Random Number Generator</h1>"
     "<button onclick=\"fetchRandomNumber()\">Generate Random Number</button>"
     "<p id=\"randomNumber\"></p>"
+    "<p id=\"onBoardTime\"></p>"
     "<script>"
     "function fetchRandomNumber() {"
     "  fetch('/random').then(response => response.text()).then(data => {"
     "    document.getElementById('randomNumber').innerText = 'Random Number: ' + data;"
     "  });"
+    "}"
+    "</script>"
+    "<script>"
+    "function delay(ms) {"
+    "  return new Promise(resolve => setTimeout(resolve, ms));"
+    "}"
+    "</script>"
+    "<script>"
+    "async function fetchOnboardtime(){"
+    "   while (1) {"
+    "       await delay(500);"
+    "       fetch('/onboardtime').then(response => response.text()).then(data => {"
+    "       document.getElementById('onBoardTime').innerText = 'On board time: ' + data;"
+    "  });"
+    "}"
     "}"
     "</script>"
     "</body>"
@@ -109,10 +125,10 @@ const char http_index_html[] =
 void handle_http_request(Socket_t xClientSocket) {
     char buffer[BUFFER_SIZE];
     char response[BUFFER_SIZE];
-    uint8_t oo;
+    uint32_t oo;
     BaseType_t bytesReceived;
     // Получаем HTTP-запрос от клиента
-    bytesReceived = FreeRTOS_recv(xClientSocket, buffer, BUFFER_SIZE, 0);
+    bytesReceived = FreeRTOS_recv(xClientSocket, &buffer, sizeof(char)*BUFFER_SIZE, 0);
     //
     //__builtin_software_breakpoint();
     if (bytesReceived > 0) {
@@ -122,16 +138,26 @@ void handle_http_request(Socket_t xClientSocket) {
         // Проверяем, запрашивает ли клиент главную страницу
         if (strstr(buffer, "GET / ")) {
             // Отправляем главную страницу
-            snprintf(response, BUFFER_SIZE, "%s%s", http_html_hdr, http_index_html);
-            FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+            snprintf(&response, sizeof(char)*BUFFER_SIZE, "%s%s", http_html_hdr, http_index_html);
+            oo = strlen(response);
+            FreeRTOS_send(xClientSocket, &response, strlen(response), 0);
         } else if (strstr(buffer, "GET /random")) {
             // Запрос на случайное число
             int random_number = rand() % 1000;  // Генерация случайного числа
-            snprintf(response, BUFFER_SIZE, "%d", random_number);
-            FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+            snprintf(response, sizeof(char)*BUFFER_SIZE, "%s%d", http_html_hdr, random_number);
+            FreeRTOS_send(xClientSocket, &response, strlen(response), 0);
+        } else if (strstr(buffer, "GET /onboardtime")) {
+            // Запрос на время
+            TickType_t ticks = xTaskGetTickCount();
+    
+            // Конвертация тиков в миллисекунды
+            uint32_t timeMs = ticks * portTICK_PERIOD_MS;
+            //int random_number = rand() % 1000;  // Генерация случайного числа
+            snprintf(response, sizeof(char)*BUFFER_SIZE, "%s%d", http_html_hdr, timeMs);
+            FreeRTOS_send(xClientSocket, &response, strlen(response), 0);
         } else {
             // Если ресурс не найден, отправляем 404
-            snprintf(response, BUFFER_SIZE, "HTTP/1.1 404 Not Found\r\n\r\n");
+            snprintf(response, sizeof(char)*BUFFER_SIZE, "HTTP/1.1 404 Not Found\r\n\r\n");
             FreeRTOS_send(xClientSocket, response, strlen(response), 0);
         }
     }
@@ -168,32 +194,32 @@ void http_server_task(void *pvParameters) {
         // Принимаем входящее соединение
         xClientSocket = FreeRTOS_accept(xListeningSocket, &xClientAddress, &xSize);
         if (xClientSocket != FREERTOS_INVALID_SOCKET) {
-            // Обрабатываем запрос и отправляем ответ
-            //handle_http_request(xClientSocket);
-            // Получаем HTTP-запрос от клиента
-            bytesReceived = FreeRTOS_recv(xClientSocket, &buffer, BUFFER_SIZE, 0);
-            if (bytesReceived > 0) {
-                buffer[bytesReceived] = '\0';  // Завершаем строку
-
-                // Проверяем, запрашивает ли клиент главную страницу
-                if (strstr(buffer, "GET / ")) {
-                    // Отправляем главную страницу
-                    snprintf(response, BUFFER_SIZE, "%s%s", http_html_hdr, http_index_html);
-                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
-                } else if (strstr(buffer, "GET /random")) {
-                    // Запрос на случайное число
-                    int random_number = rand() % 1000;  // Генерация случайного числа
-                    snprintf(response, BUFFER_SIZE, "%d", random_number);
-                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
-                } else {
-                    // Если ресурс не найден, отправляем 404
-                    snprintf(response, BUFFER_SIZE, "HTTP/1.1 404 Not Found\r\n\r\n");
-                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
-                }
-            }
-
-            // Закрываем соединение с клиентом
-            FreeRTOS_closesocket(xClientSocket);
+//            // Обрабатываем запрос и отправляем ответ
+            handle_http_request(xClientSocket);
+//            // Получаем HTTP-запрос от клиента
+//            bytesReceived = FreeRTOS_recv(xClientSocket, &buffer, BUFFER_SIZE, 0);
+//            if (bytesReceived > 0) {
+//                buffer[bytesReceived] = '\0';  // Завершаем строку
+//
+//                // Проверяем, запрашивает ли клиент главную страницу
+//                if (strstr(buffer, "GET / ")) {
+//                    // Отправляем главную страницу
+//                    snprintf(response, BUFFER_SIZE, "%s%s", http_html_hdr, http_index_html);
+//                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+//                } else if (strstr(buffer, "GET /random")) {
+//                    // Запрос на случайное число
+//                    int random_number = rand() % 1000;  // Генерация случайного числа
+//                    snprintf(response, BUFFER_SIZE, "%d", random_number);
+//                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+//                } else {
+//                    // Если ресурс не найден, отправляем 404
+//                    snprintf(response, BUFFER_SIZE, "HTTP/1.1 404 Not Found\r\n\r\n");
+//                    FreeRTOS_send(xClientSocket, response, strlen(response), 0);
+//                }
+//            }
+//
+//            // Закрываем соединение с клиентом
+//            FreeRTOS_closesocket(xClientSocket);
         }
     }
 }
@@ -214,7 +240,7 @@ int main(int argc, char *argv[])
     xTaskCreate(&Task1,             "Task1",        350,                            NULL, tskIDLE_PRIORITY + 1, &g_hTask1);
     xTaskCreate(&Task2,             "Task2",        620,                            NULL, tskIDLE_PRIORITY + 1, &g_hTask2);
     xTaskCreate(&PacketTask,        "Packet",       200,                            NULL, tskIDLE_PRIORITY + 4, &g_hPacketTask);
-    xTaskCreate(http_server_task,   "HTTP Server",  configMINIMAL_STACK_SIZE * 4,   NULL, tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(http_server_task,   "HTTP Server",  configMINIMAL_STACK_SIZE * 10,   NULL, tskIDLE_PRIORITY + 1, NULL);
     
 #if defined(__PIC32MZ__) && (__PIC32_FEATURE_SET0 == 'D')
     FreeRTOS_IPInit(pIP_ADDRESS, pNET_MASK, pGATEWAY_ADDRESS, pDNS_ADDRESS, pDEVEL_MAC_ADDR);
