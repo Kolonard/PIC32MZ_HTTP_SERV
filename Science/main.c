@@ -30,8 +30,11 @@
 #include <FreeRTOS_Sockets.h>
 #include "FreeRTOS_DHCP.h"
 
-#include "UART2.h"
-#include "TestHarness.h"
+//#include "UART2.h"
+
+#include "PIC32Arch.h"
+#include "uart_rx_tx.h"
+//#include "TestHarness.h"
 
 #if defined(__PIC32MX__)
 
@@ -55,6 +58,9 @@ static const uint8_t pIP_ADDRESS[ipIP_ADDRESS_LENGTH_BYTES] = {172, 16, 1, 201};
 #else
 static const uint8_t pIP_ADDRESS[ipIP_ADDRESS_LENGTH_BYTES] = {192, 168, 1, 101};
 #endif
+
+
+
 
 static const uint8_t pNET_MASK[ipIP_ADDRESS_LENGTH_BYTES] = {255, 255, 255, 0};
 static const uint8_t pGATEWAY_ADDRESS[ipIP_ADDRESS_LENGTH_BYTES] = {192, 168, 1, 1};
@@ -80,6 +86,9 @@ portTASK_FUNCTION_PROTO(PacketTask, pParams);
 TaskHandle_t g_hTask1;
 TaskHandle_t g_hTask2;
 TaskHandle_t g_hPacketTask;
+
+
+
 
 /*
  *
@@ -223,7 +232,49 @@ void http_server_task(void *pvParameters) {
         }
     }
 }
+#define LED_PIN LATHbits.LATH2
+#define LED_TRIS TRISHbits.TRISH2
+uint8_t ii;
+void vLedBlinkTask(void *pvParameters) {
+    ii = 0;
+    while (1) {
+        ii++;
+        LED_PIN ^= 1; // Инвертируем состояние светодиода
+        vTaskDelay(pdMS_TO_TICKS(500)); // Ожидание 500 мс
+    }
+}
 
+
+void NoTask(){
+    uint32_t ii;
+    
+    char tstr;
+    tstr = 0xc0;
+    
+    UartPacket send_struct; 
+    ii = 0;
+        send_struct.header = 1;
+        send_struct.data[0] = 2;
+        send_struct.length = 1;
+        send_struct.checksum = 5;
+        
+      
+        
+    while(1){
+
+
+//        xQueueSend(uartTxQueue, &tstr, portMAX_DELAY);
+
+
+        U2TXREG = 0xc0;
+        U2TXREG = 0xc0;
+        U2TXREG = 0xc0;
+        U2TXREG = 0x00;
+//        ii++;
+//        IFS4bits.U2TXIF = 1;
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -235,12 +286,22 @@ int main(int argc, char *argv[])
     HardwareUseMultiVectoredInterrupts();
     HardwareConfigPeripherals();
 
-    portDISABLE_INTERRUPTS();
-
-    xTaskCreate(&Task1,             "Task1",        350,                            NULL, tskIDLE_PRIORITY + 1, &g_hTask1);
-    xTaskCreate(&Task2,             "Task2",        620,                            NULL, tskIDLE_PRIORITY + 1, &g_hTask2);
-    xTaskCreate(&PacketTask,        "Packet",       200,                            NULL, tskIDLE_PRIORITY + 4, &g_hPacketTask);
-    xTaskCreate(http_server_task,   "HTTP Server",  configMINIMAL_STACK_SIZE * 10,   NULL, tskIDLE_PRIORITY + 1, NULL);
+    UART2_Init();
+    
+//    portDISABLE_INTERRUPTS();
+    xTaskCreate(vLedBlinkTask, "LED Blink", 256, NULL, 1, NULL);
+    xTaskCreate(NoTask,"void*",350,NULL,tskIDLE_PRIORITY + 1, NULL);
+//    task_UART_Init();
+//    xTaskCreate(&UART1_RX,
+//                "UART1_RX",
+//                350,
+//                NULL,
+//                tskIDLE_PRIORITY + 1,
+//                &g_hTask1);
+//    xTaskCreate(&Task1,             "Task1",        350,                            NULL, tskIDLE_PRIORITY + 1, &g_hTask1);
+//    xTaskCreate(&Task2,             "Task2",        620,                            NULL, tskIDLE_PRIORITY + 1, &g_hTask2);
+//    xTaskCreate(&PacketTask,        "Packet",       200,                            NULL, tskIDLE_PRIORITY + 4, &g_hPacketTask);
+//    xTaskCreate(http_server_task,   "HTTP Server",  configMINIMAL_STACK_SIZE * 10,   NULL, tskIDLE_PRIORITY + 1, NULL);
     
 #if defined(__PIC32MZ__) && (__PIC32_FEATURE_SET0 == 'D')
     FreeRTOS_IPInit(pIP_ADDRESS, pNET_MASK, pGATEWAY_ADDRESS, pDNS_ADDRESS, pDEVEL_MAC_ADDR);
@@ -260,6 +321,9 @@ int main(int argc, char *argv[])
 }
 
 /*-----------------------------------------------------------*/
+
+
+
 
 #if defined(__PIC32MZ__)
 
@@ -813,7 +877,7 @@ void HardwareConfigPeripherals(void)
     LATDCLR = _LATD_LATD0_MASK | _LATD_LATD1_MASK | _LATD_LATD2_MASK;
 #endif
 
-    Uart2Initialise(UART2_BAUD_RATE);
+//    Uart2Initialise(UART2_BAUD_RATE);
 }
 
 time_t FreeRTOS_time(time_t *pxTime)

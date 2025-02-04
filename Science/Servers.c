@@ -122,7 +122,7 @@ portTASK_FUNCTION(Task2, pParams)
     TCPServer_t *pServers = FreeRTOS_CreateTCPServer(xServerConfiguration, _countof(xServerConfiguration));
 
     vRegisterSampleCLICommands();
-    RegisterTestHarnessCLICommands();
+//    RegisterTestHarnessCLICommands();
 
     vStartTCPCommandInterpreterTask(TCP_CLI_TASK_STACK_SIZE, TCP_CLI_SERVER_PORT, tskIDLE_PRIORITY + 1);
 
