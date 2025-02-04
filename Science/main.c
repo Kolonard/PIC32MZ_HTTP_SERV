@@ -246,32 +246,9 @@ void vLedBlinkTask(void *pvParameters) {
 
 
 void NoTask(){
-    uint32_t ii;
-    
-    char tstr;
-    tstr = 0xc0;
-    
-    UartPacket send_struct; 
-    ii = 0;
-        send_struct.header = 1;
-        send_struct.data[0] = 2;
-        send_struct.length = 1;
-        send_struct.checksum = 5;
-        
-      
-        
     while(1){
-
-
-//        xQueueSend(uartTxQueue, &tstr, portMAX_DELAY);
-
-
-        U2TXREG = 0xc0;
-        U2TXREG = 0xc0;
-        U2TXREG = 0xc0;
-        U2TXREG = 0x00;
-//        ii++;
-//        IFS4bits.U2TXIF = 1;
+        const char *message = "Hello from";
+        uart2_println(message);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -287,7 +264,7 @@ int main(int argc, char *argv[])
     HardwareConfigPeripherals();
 
     UART2_Init();
-    
+    uart2_println("I'm allive!");
 //    portDISABLE_INTERRUPTS();
     xTaskCreate(vLedBlinkTask, "LED Blink", 256, NULL, 1, NULL);
     xTaskCreate(NoTask,"void*",350,NULL,tskIDLE_PRIORITY + 1, NULL);

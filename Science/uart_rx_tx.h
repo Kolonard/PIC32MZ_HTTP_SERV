@@ -27,11 +27,11 @@
 
 #define MAX_UART_RX_LEN (82)
 
-#define UART_RX_QUEUE_LENGTH 10
-#define UART_TX_QUEUE_LENGTH 10
+#define UART_RX_QUEUE_LENGTH 255
+#define UART_TX_QUEUE_LENGTH 255
 
-QueueHandle_t uartRxQueue;
-QueueHandle_t uartTxQueue;
+static QueueHandle_t uartRxQueue;
+static QueueHandle_t uartTxQueue;
 
 
     typedef enum {
@@ -59,6 +59,11 @@ QueueHandle_t uartTxQueue;
     void UART2_Init(void);
     void UART2_TxTask(void *pvParameters);
     void UART2_RxTask(void *pvParameters);
+    
+    void UART2_SendString(const char *str);
+    
+    void uart2_println(const char *str);
+    
     void vLoggingPrintf(const char *pcFormat, ...);
     
 #endif /* _EXAMPLE_FILE_NAME_H */
