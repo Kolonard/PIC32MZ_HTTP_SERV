@@ -16,6 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define LED_PIN LATHbits.LATH2
+#define LED_TRIS TRISHbits.TRISH2
+
+
 // RTOS
 #include <FreeRTOS.h>
 #include <task.h>
@@ -33,7 +37,7 @@
 //#include "UART2.h"
 
 #include "PIC32Arch.h"
-#include "uart_rx_tx.h"
+#include "uart_daemon.h"
 //#include "TestHarness.h"
 
 #if defined(__PIC32MX__)
@@ -232,23 +236,29 @@ void http_server_task(void *pvParameters) {
         }
     }
 }
-#define LED_PIN LATHbits.LATH2
-#define LED_TRIS TRISHbits.TRISH2
+
 uint8_t ii;
 void vLedBlinkTask(void *pvParameters) {
     ii = 0;
     while (1) {
         ii++;
-        LED_PIN ^= 1; // Инвертируем состояние светодиода
-        vTaskDelay(pdMS_TO_TICKS(500)); // Ожидание 500 мс
+        LED_PIN ^= 1; // ??????????? ????????? ??????????
+        vTaskDelay(pdMS_TO_TICKS(500)); // ???????? 500 ??
     }
 }
 
 
 void NoTask(){
+    const char *message = "Hello from";
+    char msg[ONE_INT32_MAX_LEN];
+    uint32_t ii = 0;
+    
+    
+    
+    uart2_println("UART2 active");
     while(1){
-        const char *message = "Hello from";
-        uart2_println(message);
+        sprintf(msg, "%d", ii++);
+        uart2_println(msg);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -257,14 +267,16 @@ int main(int argc, char *argv[])
 {
     // Disable interrupts - note taskDISABLE_INTERRUPTS() cannot be used here as
     // FreeRTOS does not globally disable interrupts
-    __builtin_disable_interrupts();
-
+//    __builtin_disable_interrupts();
+    
+    
     HardwareConfigurePerformance();
     HardwareUseMultiVectoredInterrupts();
     HardwareConfigPeripherals();
-
-    UART2_Init();
+uart2_Init();
+    uart2_enable();
     uart2_println("I'm allive!");
+    
 //    portDISABLE_INTERRUPTS();
     xTaskCreate(vLedBlinkTask, "LED Blink", 256, NULL, 1, NULL);
     xTaskCreate(NoTask,"void*",350,NULL,tskIDLE_PRIORITY + 1, NULL);
