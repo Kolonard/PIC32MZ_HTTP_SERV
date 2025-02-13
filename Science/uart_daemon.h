@@ -25,15 +25,21 @@
 
 #include <stdint.h>
 
+#include "freertos.h"
+#include "queue.h"
+#include "semphr.h"
+
 #define MAX_UART_RX_LEN (82)
 
-#define UART_RX_QUEUE_LENGTH 255
-#define UART_TX_QUEUE_LENGTH 255
+#define UART_RX_QUEUE_LENGTH 1024   
+#define UART_TX_QUEUE_LENGTH 1024
 
 #define ONE_INT32_MAX_LEN     12
 
-static QueueHandle_t uartRxQueue;
-static QueueHandle_t uartTxQueue;
+QueueHandle_t uartRxQueue;
+QueueHandle_t uartTxQueue;
+
+SemaphoreHandle_t xMutex;
 
 static TaskHandle_t xUARTrx_Task_Handle = NULL;
 
@@ -59,7 +65,7 @@ static TaskHandle_t xUARTrx_Task_Handle = NULL;
     void        _uart2_SendString(const char *str);
     uint16_t    _calcUartBaudRate(uint32_t fpb, uint32_t baud);
     void        _uart2_rx_handle( void );
-    
+    void        _uart2_PPS_setup( void );
     
     void vLoggingPrintf(const char *pcFormat, ...);
     

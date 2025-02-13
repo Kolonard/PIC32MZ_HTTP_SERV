@@ -7,7 +7,7 @@
       <itemPath>UART2.h</itemPath>
       <itemPath>TestHarness.h</itemPath>
       <itemPath>../include/PHYHardwareProfile.h</itemPath>
-      <itemPath>uart_rx_tx.h</itemPath>
+      <itemPath>uart_daemon.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -23,7 +23,6 @@
                    projectFiles="true">
       <itemPath>main.c</itemPath>
       <itemPath>configuration_bits.c</itemPath>
-      <itemPath>UART2_isr.S</itemPath>
       <itemPath>UART2.c</itemPath>
       <itemPath>RTOSSupport.c</itemPath>
       <itemPath>../FreeRTOS-Labs/Demo/Common/FreeRTOS_Plus_FAT_Demos/test/ff_stdio_tests_with_cwd.c</itemPath>
@@ -39,7 +38,7 @@
       <itemPath>OnReset.S</itemPath>
       <itemPath>TCPCommandConsole.c</itemPath>
       <itemPath>heap_3_debug.c</itemPath>
-      <itemPath>uart_rx_tx.c</itemPath>
+      <itemPath>uart_daemon.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -986,6 +985,7 @@
         <property key="event.recorder.debugger.behavior" value="Running"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
+        <property key="firmware.download.all" value="false"/>
         <property key="lastid" value=""/>
         <property key="memories.configurationmemory" value="true"/>
         <property key="memories.dataflash" value="true"/>
@@ -1365,22 +1365,6 @@
         </C32Global>
       </item>
       <item path="UART2.h" ex="true" overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
-      <item path="UART2_isr.S" ex="true" overriding="false">
         <C32>
         </C32>
         <C32-AR>

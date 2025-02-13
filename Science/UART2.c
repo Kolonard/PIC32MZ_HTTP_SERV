@@ -42,18 +42,18 @@ static uart_stats_t s_UartStats;
 
 #if defined(__PIC32MZ__)
 
-//void __attribute__(( interrupt(IPL0AUTO), vector(_UART2_FAULT_VECTOR) )) Uart2FaultInterruptWrapper(void);
-//void __attribute__(( interrupt(IPL0AUTO), vector(_UART2_TX_VECTOR) )) Uart2TxInterruptWrapper(void);
-//void __attribute__(( interrupt(IPL0AUTO), vector(_UART2_RX_VECTOR) )) Uart2RxInterruptWrapper(void);
-//
-//#define ClearAllInterrupts()    IFS4CLR = _IFS4_U2EIF_MASK | _IFS4_U2RXIF_MASK | _IFS4_U2TXIF_MASK
-//#define ClearErrorInterrupt()   IFS4CLR = _IFS4_U2EIF_MASK
-//#define ClearRxInterrupt()      IFS4CLR = _IFS4_U2RXIF_MASK
-//#define EnableRxInterrupt()     IEC4SET = _IEC4_U2RXIE_MASK
-//#define DisableRxInterrupt()    IEC4CLR = _IEC4_U2RXIE_MASK
-//#define ClearTxInterrupt()      IFS4CLR = _IFS4_U2TXIF_MASK
-//#define EnableTxInterrupt()     IEC4SET = _IEC4_U2TXIE_MASK
-//#define DisableTxInterrupt()    IEC4CLR = _IEC4_U2TXIE_MASK
+void __attribute__(( interrupt(IPL0AUTO), vector(_UART2_FAULT_VECTOR) )) Uart2FaultInterruptWrapper(void);
+void __attribute__(( interrupt(IPL0AUTO), vector(_UART2_TX_VECTOR) )) Uart2TxInterruptWrapper(void);
+void __attribute__(( interrupt(IPL0AUTO), vector(_UART2_RX_VECTOR) )) Uart2RxInterruptWrapper(void);
+
+#define ClearAllInterrupts()    IFS4CLR = _IFS4_U2EIF_MASK | _IFS4_U2RXIF_MASK | _IFS4_U2TXIF_MASK
+#define ClearErrorInterrupt()   IFS4CLR = _IFS4_U2EIF_MASK
+#define ClearRxInterrupt()      IFS4CLR = _IFS4_U2RXIF_MASK
+#define EnableRxInterrupt()     IEC4SET = _IEC4_U2RXIE_MASK
+#define DisableRxInterrupt()    IEC4CLR = _IEC4_U2RXIE_MASK
+#define ClearTxInterrupt()      IFS4CLR = _IFS4_U2TXIF_MASK
+#define EnableTxInterrupt()     IEC4SET = _IEC4_U2TXIE_MASK
+#define DisableTxInterrupt()    IEC4CLR = _IEC4_U2TXIE_MASK
 
 #elif defined(__PIC32MX__)
 

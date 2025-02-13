@@ -145,6 +145,7 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook	function is
     called if a task stack overflow is detected.  Note the system/interrupt
     stack is not checked. */
+//    uart2_println(pcTaskName);
     taskDISABLE_INTERRUPTS();
 
 #ifdef __DEBUG

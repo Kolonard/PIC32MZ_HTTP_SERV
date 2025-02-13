@@ -253,8 +253,6 @@ void NoTask(){
     char msg[ONE_INT32_MAX_LEN];
     uint32_t ii = 0;
     
-    
-    
     uart2_println("UART2 active");
     while(1){
         sprintf(msg, "%d", ii++);
@@ -279,7 +277,7 @@ uart2_Init();
     
 //    portDISABLE_INTERRUPTS();
     xTaskCreate(vLedBlinkTask, "LED Blink", 256, NULL, 1, NULL);
-    xTaskCreate(NoTask,"void*",350,NULL,tskIDLE_PRIORITY + 1, NULL);
+//    xTaskCreate(NoTask,"void*",2048,NULL,tskIDLE_PRIORITY + 1, NULL);
 //    task_UART_Init();
 //    xTaskCreate(&UART1_RX,
 //                "UART1_RX",
@@ -339,14 +337,18 @@ void HardwareConfigurePerformance(void)
                | _PMD5_CAN1MD_MASK | _PMD5_CAN2MD_MASK );
     PMD6SET = (_PMD6_RTCCMD_MASK | _PMD6_PMPMD_MASK | _PMD6_EBIMD_MASK);
 
-    // Disable analogue for UART2 pins (B14, G6) and I2C4 pins (G7, G8)
-    ANSELBCLR = _ANSELB_ANSB14_MASK | _ANSELB_ANSB15_MASK;
-    ANSELGCLR = _ANSELG_ANSG7_MASK | _ANSELG_ANSG8_MASK;//_ANSELG_ANSG6_MASK | 
-
-    // PPS and I/O configuration for UART2
-    TRISBSET = _TRISB_TRISB15_MASK;
-    U2RXRbits.U2RXR = 0b0011;   // RPB15
-    RPB14Rbits.RPB14R = 0b0010; // U2TX
+    
+    
+    
+//!!!! transfer to uart_daemon
+//    // Disable analogue for UART2 pins (B14, G6) and I2C4 pins (G7, G8)
+//    ANSELBCLR = _ANSELB_ANSB14_MASK | _ANSELB_ANSB15_MASK;
+//    ANSELGCLR = _ANSELG_ANSG7_MASK | _ANSELG_ANSG8_MASK;//_ANSELG_ANSG6_MASK | 
+//
+//    // PPS and I/O configuration for UART2
+//    TRISBSET = _TRISB_TRISB15_MASK;
+//    U2RXRbits.U2RXR = 0b0011;   // RPB15
+//    RPB14Rbits.RPB14R = 0b0010; // U2TX
     //    TRISGSET = _TRISG_TRISG6_MASK;
 //    U2RXRbits.U2RXR = 0b0001;   // RPG6
 //    RPB14Rbits.RPB14R = 0b0010; // U2TX
